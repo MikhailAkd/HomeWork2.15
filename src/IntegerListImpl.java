@@ -1,35 +1,41 @@
 import java.util.Objects;
 
-public class StringListImpl implements StringList {
+public class IntegerListImpl implements IntegerList {
 
     private static final int SIZE = 15;
 
-    private final String[] storage;
+    private Integer[] storage;
 
     private int capacity;
 
-    public StringListImpl() {
-        storage = new String[SIZE];
+    public IntegerListImpl() {
+        storage = new Integer[SIZE];
         capacity = 0;
     }
 
-    public StringListImpl(int a) {
+    public IntegerListImpl(int a) {
         if (a <= 0) {
             throw new IllegalArgumentException("Размер списка должен быть положительным");
         }
-        storage = new String[a];
+        storage = new Integer[a];
         capacity = 0;
     }
 
+    private void grow() {
+        Integer[] newData = new Integer[(int) 1.5 * storage.length];
+        System.arraycopy(storage, 0, newData, 0, capacity);
+        storage = newData;
+    }
+
     @Override
-    public String add(String item) {
+    public Integer add(Integer item) {
         return add(capacity, item);
     }
 
     @Override
-    public String add(int index, String item) {
+    public Integer add(int index, Integer item) {
         if (capacity >= storage.length) {
-            throw new IllegalArgumentException("Список полон");
+            grow();
         }
         checkNotNull(item);
         checkNonNegativeIndex(index);
@@ -41,7 +47,7 @@ public class StringListImpl implements StringList {
     }
 
     @Override
-    public String set(int index, String item) {
+    public Integer set(int index, Integer item) {
         checkNotNull(item);
         checkNonNegativeIndex(index);
         checkIndex(index, true);
@@ -49,7 +55,7 @@ public class StringListImpl implements StringList {
     }
 
     @Override
-    public String remove(String item) {
+    public Integer remove(Integer item) {
         int indexForRemoving = indexOf(item);
         if (indexForRemoving == -1) {
             throw new IllegalArgumentException("Элемент не найден");
@@ -58,22 +64,63 @@ public class StringListImpl implements StringList {
     }
 
     @Override
-    public String remove(int index) {
+    public Integer remove(int index) {
         checkNonNegativeIndex(index);
         checkIndex(index, true);
-        String removed = storage[index];
+        Integer removed = storage[index];
         System.arraycopy(storage, index + 1, storage, index, capacity - 1 - index);
         storage[--capacity] = null;
         return removed;
     }
 
     @Override
-    public boolean contains(String item) {
-        return indexOf(item) != -1;
+    public boolean contains(Integer item) {
+        checkNotNull(item);
+        Integer[] arrayForSearch = toArray();
+        quickSort(arrayForSearch, 0, arrayForSearch.length -1);
+        int min = 0;
+        int max = arrayForSearch.length - 1;
+        while (min <= max) {
+            int mid = (min + max / 2);
+            if (item.equals(arrayForSearch[mid])) {
+                return false;
+            }
+            if (item < arrayForSearch[mid]) {
+                max = mid - 1;
+            } else {
+                min = mid + 1;
+            }
+        }
+        return false;
+    }
+
+    public static void quickSort(Integer[] arr, int begin, int end) {
+        if (begin < end) {
+            int partitionIndex = partition(arr, begin, end);
+
+            quickSort(arr, begin, partitionIndex - 1);
+            quickSort(arr, partitionIndex + 1, end);
+        }
+    }
+
+    private static int partition(Integer[] arr, int begin, int end) {
+        int pivot = arr[end];
+        int i = (begin - 1);
+
+        for (int j = begin; j < end; j++) {
+            if (arr[j] <= pivot) {
+                i++;
+
+                swapElements(arr, i, j);
+            }
+        }
+
+        swapElements(arr, i + 1, end);
+        return i + 1;
     }
 
     @Override
-    public int indexOf(String item) {
+    public int indexOf(Integer item) {
         checkNotNull(item);
         int index = -1;
         for (int i = 0; i < capacity; i++) {
@@ -86,7 +133,7 @@ public class StringListImpl implements StringList {
     }
 
     @Override
-    public int lastIndexOf(String item) {
+    public int lastIndexOf(Integer item) {
         checkNotNull(item);
         int index = -1;
         for (int i = capacity; i >= 0; i--) {
@@ -99,14 +146,14 @@ public class StringListImpl implements StringList {
     }
 
     @Override
-    public String get(int index) {
+    public Integer get(int index) {
         checkNonNegativeIndex(index);
         checkIndex(index, true);
         return storage[index];
     }
 
     @Override
-    public boolean equals(StringList otherList) {
+    public boolean equals(IntegerList otherList) {
         if (size() != otherList.size()) {
             return false;
         }
@@ -137,13 +184,19 @@ public class StringListImpl implements StringList {
     }
 
     @Override
-    public String[] toArray() {
-        String[] result = new String[capacity];
+    public Integer[] toArray() {
+        Integer[] result = new Integer[capacity];
         System.arraycopy(storage, 0, result, 0, capacity);
         return result;
     }
 
-    private void checkNotNull(String item) {
+    private static void swapElements(Integer[] arr, int left, int right) {
+        int temp = arr[left];
+        arr[left] = arr[right];
+        arr[right] = temp;
+    }
+
+    private void checkNotNull(Integer item) {
         if (Objects.isNull(item)) {
             throw new IllegalArgumentException("Нельзя хранить null в списке");
         }
