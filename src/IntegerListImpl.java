@@ -4,7 +4,7 @@ public class IntegerListImpl implements IntegerList {
 
     private static final int SIZE = 15;
 
-    private final Integer[] storage;
+    private Integer[] storage;
 
     private int capacity;
 
@@ -21,6 +21,12 @@ public class IntegerListImpl implements IntegerList {
         capacity = 0;
     }
 
+    private void grow() {
+        Integer[] newData = new Integer[(int) 1.5 * storage.length];
+        System.arraycopy(storage, 0, newData, 0, capacity);
+        storage = newData;
+    }
+
     @Override
     public Integer add(Integer item) {
         return add(capacity, item);
@@ -29,7 +35,7 @@ public class IntegerListImpl implements IntegerList {
     @Override
     public Integer add(int index, Integer item) {
         if (capacity >= storage.length) {
-            throw new IllegalArgumentException("Список полон");
+            grow();
         }
         checkNotNull(item);
         checkNonNegativeIndex(index);
@@ -71,7 +77,7 @@ public class IntegerListImpl implements IntegerList {
     public boolean contains(Integer item) {
         checkNotNull(item);
         Integer[] arrayForSearch = toArray();
-        sortInsertion(arrayForSearch);
+        quickSort(arrayForSearch, 0, arrayForSearch.length -1);
         int min = 0;
         int max = arrayForSearch.length - 1;
         while (min <= max) {
@@ -86,6 +92,31 @@ public class IntegerListImpl implements IntegerList {
             }
         }
         return false;
+    }
+
+    public static void quickSort(Integer[] arr, int begin, int end) {
+        if (begin < end) {
+            int partitionIndex = partition(arr, begin, end);
+
+            quickSort(arr, begin, partitionIndex - 1);
+            quickSort(arr, partitionIndex + 1, end);
+        }
+    }
+
+    private static int partition(Integer[] arr, int begin, int end) {
+        int pivot = arr[end];
+        int i = (begin - 1);
+
+        for (int j = begin; j < end; j++) {
+            if (arr[j] <= pivot) {
+                i++;
+
+                swapElements(arr, i, j);
+            }
+        }
+
+        swapElements(arr, i + 1, end);
+        return i + 1;
     }
 
     @Override
@@ -159,16 +190,10 @@ public class IntegerListImpl implements IntegerList {
         return result;
     }
 
-    private void sortInsertion(Integer[] arr) {
-        for (int i = 0; i < arr.length; i++) {
-            int temp = arr[i];
-            int j = i;
-            while (j > 0 && arr[j - 1] >= temp) {
-                arr[j] = arr[j - 1];
-                j--;
-            }
-            arr[j] = temp;
-        }
+    private static void swapElements(Integer[] arr, int left, int right) {
+        int temp = arr[left];
+        arr[left] = arr[right];
+        arr[right] = temp;
     }
 
     private void checkNotNull(Integer item) {
